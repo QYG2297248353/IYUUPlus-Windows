@@ -22,9 +22,14 @@ function startServer() {
     const args = ['./iyuu/windows.php'];
     const workingDirectory = path.resolve(__dirname, '..');
 
+    const env = { ...process.env };
+    const phpDir = path.dirname(cmdPath);
+    env.PATH = `${phpDir}${path.delimiter}${env.PATH}`;
+
     serverProcess = spawn(cmdPath, args, {
         cwd: workingDirectory,
-        stdio: ['inherit', 'pipe', 'inherit']
+        stdio: ['inherit', 'pipe', 'inherit'],
+        env: env
     });
 
     serverProcess.stdout.setEncoding('utf8');
@@ -53,4 +58,9 @@ function stopServer() {
     }
 }
 
-module.exports = { startServer, stopServer };
+function restartServer() {
+    stopServer();
+    startServer();
+}
+
+module.exports = { startServer, stopServer, restartServer };

@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, Menu } = require('electron')
 const path = require('node:path')
 const server = require('./server/server');
 
@@ -10,6 +10,8 @@ const createWindow = () => {
             preload: path.join(__dirname, 'preload.js')
         }
     })
+
+    require("./menu/menu.js")
 
     win.loadURL('http://127.0.0.1:8787')
 }
