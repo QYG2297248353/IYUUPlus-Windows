@@ -3,12 +3,12 @@ const os = require('os');
 const path = require('path');
 const log = require('electron-log')
 
-function getCmdPath(resourcePath) {
+function getPhpPath(resourcePath) {
     const arch = os.arch();
     if (arch === 'x64') {
-        return path.join(resourcePath, 'run', 'php-8.3.8-x64', 'php.exe');
+        return path.join(resourcePath, 'run', 'php-8.3.8-x64');
     } else if (arch === 'ia32') {
-        return path.join(resourcePath, 'run', 'php-8.3.8-x86', 'php.exe');
+        return path.join(resourcePath, 'run', 'php-8.3.8-x86');
     } else {
         log.info("Unsupported architecture:", arch);
         process.exit(1);
@@ -23,15 +23,18 @@ function startServer() {
         resourcePath = process.cwd();
     }
 
-    const cmdPath = getCmdPath(resourcePath);
-    const batPath = path.join(resourcePath, 'run.bat');
-    const workingDirectory = path.resolve(resourcePath);
-
     const env = { ...process.env };
-    const phpDir = path.dirname(cmdPath);
+    const phpDir = getPhpPath(resourcePath);
     env.Path = `${phpDir};${env.Path}`;
 
-    // serverProcess = exec(`C:\\Windows\\System32\\cmd.exe /c ${batPath}`, {
+    const workingDir = path.resolve(path.join(resourcePath, 'iyuu'));
+    const batFile = path.join('windows.bat');
+    // batFile 父目录
+
+
+    log.info(`[IYUU] 工作目录: ${workingDir}`);
+
+    // serverProcess = exec(`cmd /c ${batPath}`, {
     //     cwd: workingDirectory,
     //     env: env,
     //     windowsHide: true
@@ -47,33 +50,50 @@ function startServer() {
     //     log.info(`[IYUU] 服务启动成功: ${stdout}`);
     // });
 
-    serverProcess = execFile('cmd.exe', ['/c', batPath], {
-        cwd: workingDirectory,
-        stdio: 'ignore',
-        env: env,
-        windowsHide: true
-    });
 
-    // serverProcess = spawn('cmd.exe', ['/c', batPath], {
+    // serverProcess = execFile('cmd', ['/c', batPath], {
     //     cwd: workingDirectory,
-    //     stdio: 'ignore',
     //     env: env,
-    //     detached: true,
-    //     windowsHide: true
+    //     killSignal: 'SIGTERM',
+    //     windowsHide: true,
+    // }, (error, stdout, stderr) => {
+    //     if (error) {
+    //         log.error(`[IYUU] 服务启动错误: ${error.message}`);
+    //     } else {
+    //         log.error(`[IYUU] 服务启动 stderr: ${stderr}`);
+    //         log.info(`[IYUU] 服务启动成功: ${stdout}`);
+    //     }
     // });
+
+    serverProcess = spawn('cmd', ['/k', 'windows.bat'], {
+        cwd: workingDir,
+        stdio: 'pipe',
+        env: env,
+        detached: true,
+        windowsHide: false
+    });
 
     serverProcess.unref();
 
     if (serverProcess.stdout) {
-        serverProcess.stdout.setEncoding('utf8');
-
-        serverProcess.stdout.on("data", function (data) {
-            log.info("[IYUU] 服务启动成功");
+        serverProcess.stdout.on('data', (data) => {
+            log.info(`[IYUU] ${data}`);
         });
+
+        serverProcess.stderr.on('data', (data) => {
+            log.error(`[IYUU] ${data}`);
+        });
+
+
     }
+
+    serverProcess.on('error', (err) => {
+        log.error(`[IYUU] 服务启动错误: ${err.message}`);
+    });
 
     serverProcess.on("close", function (code) {
         log.info("[IYUU] 服务退出：" + code);
+        restartServer();
     });
 }
 
@@ -87,7 +107,6 @@ function stopServer() {
             serverProcess = null;
         } catch (err) {
             log.error('Error using process.kill:', err);
-            log.info('Falling back to taskkill');
             exec(`taskkill /PID ${serverProcess.pid} /T /F`, (err, stdout, stderr) => {
                 if (err) {
                     log.error('Error using taskkill:', err);

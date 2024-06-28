@@ -3,6 +3,10 @@ const path = require('node:path')
 const server = require('./server/server');
 const log = require('electron-log')
 
+if (require('electron-squirrel-startup')) {
+    app.quit()
+    return
+}
 
 const createWindow = () => {
     const win = new BrowserWindow({
