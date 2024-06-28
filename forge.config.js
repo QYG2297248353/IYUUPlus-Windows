@@ -7,7 +7,8 @@ module.exports = {
     icon: 'iyuu.png',
     extraResource: [
       'run/',
-      'iyuu/'
+      'iyuu/',
+      "run.bat"
     ]
   },
   rebuildConfig: {},

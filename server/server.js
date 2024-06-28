@@ -1,4 +1,4 @@
-const { spawn, exec } = require('child_process');
+const { spawn, exec, execFile } = require('child_process');
 const os = require('os');
 const path = require('path');
 const log = require('electron-log')
@@ -24,25 +24,54 @@ function startServer() {
     }
 
     const cmdPath = getCmdPath(resourcePath);
-    const args = [path.join(resourcePath, 'iyuu', 'windows.php')];
+    const batPath = path.join(resourcePath, 'run.bat');
     const workingDirectory = path.resolve(resourcePath);
 
     const env = { ...process.env };
     const phpDir = path.dirname(cmdPath);
-    env.PATH = `${phpDir}${path.delimiter}${env.PATH}`;
+    env.Path = `${phpDir};${env.Path}`;
 
-    serverProcess = spawn(cmdPath, args, {
+    // serverProcess = exec(`C:\\Windows\\System32\\cmd.exe /c ${batPath}`, {
+    //     cwd: workingDirectory,
+    //     env: env,
+    //     windowsHide: true
+    // }, (error, stdout, stderr) => {
+    //     if (error) {
+    //         log.error(`[IYUU] 服务启动错误: ${error.message}`);
+    //         return;
+    //     }
+    //     if (stderr) {
+    //         log.error(`[IYUU] 服务启动 stderr: ${stderr}`);
+    //         return;
+    //     }
+    //     log.info(`[IYUU] 服务启动成功: ${stdout}`);
+    // });
+
+    serverProcess = execFile('cmd.exe', ['/c', batPath], {
         cwd: workingDirectory,
-        stdio: ['inherit', 'pipe', 'inherit'],
+        stdio: 'ignore',
         env: env,
-        detached: true,
+        windowsHide: true
     });
 
-    serverProcess.stdout.setEncoding('utf8');
+    // serverProcess = spawn('cmd.exe', ['/c', batPath], {
+    //     cwd: workingDirectory,
+    //     stdio: 'ignore',
+    //     env: env,
+    //     detached: true,
+    //     windowsHide: true
+    // });
 
-    serverProcess.stdout.on("data", function (data) {
-        log.info("[IYUU] 服务启动成功");
-    });
+    serverProcess.unref();
+
+    if (serverProcess.stdout) {
+        serverProcess.stdout.setEncoding('utf8');
+
+        serverProcess.stdout.on("data", function (data) {
+            log.info("[IYUU] 服务启动成功");
+        });
+    }
+
     serverProcess.on("close", function (code) {
         log.info("[IYUU] 服务退出：" + code);
     });
@@ -75,7 +104,9 @@ function stopServer() {
 
 function restartServer() {
     stopServer();
-    startServer();
+    setTimeout(() => {
+        startServer();
+    }, 1000);
 }
 
 module.exports = { startServer, stopServer, restartServer };
