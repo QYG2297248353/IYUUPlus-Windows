@@ -1,8 +1,7 @@
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 const os = require('os');
-const fs = require('fs');
 const path = require('path');
-const treeKill = require('tree-kill');
+const log = require('electron-log')
 
 function getCmdPath(resourcePath) {
     const arch = os.arch();
@@ -11,7 +10,7 @@ function getCmdPath(resourcePath) {
     } else if (arch === 'ia32') {
         return path.join(resourcePath, 'run', 'php-8.3.8-x86', 'php.exe');
     } else {
-        console.error("Unsupported architecture:", arch);
+        log.info("Unsupported architecture:", arch);
         process.exit(1);
     }
 }
@@ -36,32 +35,41 @@ function startServer() {
         cwd: workingDirectory,
         stdio: ['inherit', 'pipe', 'inherit'],
         env: env,
-        windowsHide: true
+        detached: true,
     });
 
     serverProcess.stdout.setEncoding('utf8');
 
     serverProcess.stdout.on("data", function (data) {
-        console.log("[IYUU] 服务启动成功");
+        log.info("[IYUU] 服务启动成功");
     });
     serverProcess.on("close", function (code) {
-        console.log("[IYUU] 服务退出：" + code);
+        log.info("[IYUU] 服务退出：" + code);
     });
 }
 
 function stopServer() {
     if (serverProcess) {
-        console.log("Killing server process with PID:", serverProcess.pid);
-        treeKill(serverProcess.pid, "SIGTERM", function (err) {
-            if (err) {
-                console.error('Error killing server process:', err);
-            } else {
-                console.log("后台服务已关闭...");
-                serverProcess = null;
-            }
-        });
+        log.info("Killing server process with PID:", serverProcess.pid);
+
+        try {
+            process.kill(-serverProcess.pid, 'SIGTERM');
+            log.info("后台服务已关闭...");
+            serverProcess = null;
+        } catch (err) {
+            log.error('Error using process.kill:', err);
+            log.info('Falling back to taskkill');
+            exec(`taskkill /PID ${serverProcess.pid} /T /F`, (err, stdout, stderr) => {
+                if (err) {
+                    log.error('Error using taskkill:', err);
+                } else {
+                    log.info("后台服务已关闭...");
+                    serverProcess = null;
+                }
+            });
+        }
     } else {
-        console.log("No server process to kill.");
+        log.info("No server process to kill.");
     }
 }
 
