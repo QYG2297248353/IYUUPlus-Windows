@@ -1,14 +1,15 @@
 const { spawn } = require('child_process');
 const os = require('os');
+const fs = require('fs');
 const path = require('path');
 const treeKill = require('tree-kill');
 
-function getCmdPath() {
+function getCmdPath(resourcePath) {
     const arch = os.arch();
     if (arch === 'x64') {
-        return "./run/php-8.3.8-x64/php.exe";
+        return path.join(resourcePath, 'run', 'php-8.3.8-x64', 'php.exe');
     } else if (arch === 'ia32') {
-        return "./run/php-8.3.8-x86/php.exe";
+        return path.join(resourcePath, 'run', 'php-8.3.8-x86', 'php.exe');
     } else {
         console.error("Unsupported architecture:", arch);
         process.exit(1);
@@ -18,9 +19,14 @@ function getCmdPath() {
 let serverProcess = null;
 
 function startServer() {
-    const cmdPath = getCmdPath();
-    const args = ['./iyuu/windows.php'];
-    const workingDirectory = path.resolve(__dirname, '..');
+    let resourcePath = process.resourcesPath;
+    if (resourcePath.includes('node_modules')) {
+        resourcePath = process.cwd();
+    }
+
+    const cmdPath = getCmdPath(resourcePath);
+    const args = [path.join(resourcePath, 'iyuu', 'windows.php')];
+    const workingDirectory = path.resolve(resourcePath);
 
     const env = { ...process.env };
     const phpDir = path.dirname(cmdPath);
@@ -29,16 +35,17 @@ function startServer() {
     serverProcess = spawn(cmdPath, args, {
         cwd: workingDirectory,
         stdio: ['inherit', 'pipe', 'inherit'],
-        env: env
+        env: env,
+        windowsHide: true
     });
 
     serverProcess.stdout.setEncoding('utf8');
 
     serverProcess.stdout.on("data", function (data) {
-        console.log("启动服务器成功！ stdout:" + data);
+        console.log("[IYUU] 服务启动成功");
     });
     serverProcess.on("close", function (code) {
-        console.log("out code:" + code);
+        console.log("[IYUU] 服务退出：" + code);
     });
 }
 

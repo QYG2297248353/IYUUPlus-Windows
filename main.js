@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu } = require('electron')
+const { app, BrowserWindow } = require('electron')
 const path = require('node:path')
 const server = require('./server/server');
 
@@ -18,11 +18,14 @@ const createWindow = () => {
 
 app.whenReady().then(() => {
     server.startServer()
-    createWindow()
+    console.log("[About] 新疆萌森软件开发工作室提供技术支持");
 
-    app.on('activate', () => {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow()
-    })
+    setTimeout(() => {
+        createWindow()
+        app.on('activate', () => {
+            if (BrowserWindow.getAllWindows().length === 0) createWindow()
+        })
+    }, 5000)
 })
 
 app.on('window-all-closed', () => {
