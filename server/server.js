@@ -28,10 +28,7 @@ function startServer() {
     env.Path = `${phpDir};${env.Path}`;
 
     const workingDir = path.resolve(path.join(resourcePath, 'iyuu'));
-    const batFile = path.join('windows.bat');
-    // batFile 父目录
-
-
+    
     log.info(`[IYUU] 工作目录: ${workingDir}`);
 
     // serverProcess = exec(`cmd /c ${batPath}`, {
@@ -93,7 +90,6 @@ function startServer() {
 
     serverProcess.on("close", function (code) {
         log.info("[IYUU] 服务退出：" + code);
-        restartServer();
     });
 }
 

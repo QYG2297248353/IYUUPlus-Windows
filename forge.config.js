@@ -4,30 +4,38 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 module.exports = {
   packagerConfig: {
     asar: true,
-    icon: 'iyuu.png',
+    icon: 'iyuu',
     extraResource: [
       'run/',
       'iyuu/',
-      "run.bat"
     ]
   },
   rebuildConfig: {},
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      config: {
+        setupIcon: 'iyuu.ico',
+      },
     },
     {
       name: '@electron-forge/maker-zip',
       platforms: ['darwin'],
+      config: {
+        icon: 'iyuu.icns',
+      }
     },
     {
       name: '@electron-forge/maker-deb',
-      config: {},
+      config: {
+        icon: 'iyuu.png',
+      },
     },
     {
       name: '@electron-forge/maker-rpm',
-      config: {},
+      config: {
+        icon: 'iyuu.png',
+      },
     },
   ],
   plugins: [

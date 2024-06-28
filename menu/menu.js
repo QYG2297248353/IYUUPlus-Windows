@@ -6,6 +6,14 @@ let template = [
         label: "IYUU",
         submenu: [
             {
+                label: "刷新",
+                click: () => {
+                    BrowserWindow.getAllWindows().forEach(win => {
+                        win.reload()
+                    })
+                }
+            },
+            {
                 label: "重启服务",
                 click: () => {
                     server.restartServer()
@@ -13,7 +21,7 @@ let template = [
                         BrowserWindow.getAllWindows().forEach(win => {
                             win.reload()
                         })
-                    }, 1000)
+                    }, 2000)
                 }
 
             },
@@ -40,6 +48,23 @@ let template = [
         label: "帮助",
         submenu: [
             {
+                label: "问题反馈",
+                click: () => {
+                    let win = new BrowserWindow({
+                        width: 800,
+                        height: 600,
+                        webPreferences: {
+                            nodeIntegration: true,
+                            contextIsolation: false,
+                        }
+                    });
+                    win.loadURL("https://gitee.com/qyg2297248353/iyuuplus-windows/issues");
+                    win.on("closed", () => {
+                        win = null;
+                    });
+                }
+            },
+            {
                 label: "新疆萌森软件开发工作室提供技术支持",
                 click: () => {
                     let win = new BrowserWindow({
@@ -57,21 +82,7 @@ let template = [
                 }
             },
             {
-                label: "问题反馈",
-                click: () => {
-                    let win = new BrowserWindow({
-                        width: 800,
-                        height: 600,
-                        webPreferences: {
-                            nodeIntegration: true,
-                            contextIsolation: false,
-                        }
-                    });
-                    win.loadURL("https://gitee.com/qyg2297248353/iyuuplus-windows/issues");
-                    win.on("closed", () => {
-                        win = null;
-                    });
-                }
+                label: "关于"
             }
         ]
     }

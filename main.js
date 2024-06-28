@@ -15,13 +15,34 @@ const createWindow = () => {
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
+            devTools: false,
+            webSecurity: false,
+            allowRunningInsecureContent: true,
             preload: path.join(__dirname, 'preload.js')
         }
     })
 
     require("./menu/menu.js")
+    require("./menu/tray.js")
 
-    win.loadURL('http://127.0.0.1:8787')
+    const url = require('url').format({
+        protocol: 'http',
+        slashes: true,
+        hostname: '127.0.0.1',
+        port: 8787
+    })
+
+    win.loadURL(url)
+
+    win.on('minimize', (event) => {
+        event.preventDefault()
+        win.hide()
+    })
+
+    win.on('close', (event) => {
+        event.preventDefault()
+        win.hide()
+    })
 }
 
 app.whenReady().then(() => {
@@ -35,17 +56,31 @@ app.whenReady().then(() => {
 
     setTimeout(() => {
         createWindow()
-        app.on('activate', () => {
-            if (BrowserWindow.getAllWindows().length === 0) createWindow()
-        })
     }, 5000)
 })
 
-app.on('window-all-closed', () => {
-    server.stopServer()
-    if (process.platform !== 'darwin') app.quit()
+app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow()
+    } else {
+        app.show()
+        BrowserWindow.getAllWindows().forEach(win => {
+            win.show()
+        })
+    }
 })
 
+app.on('window-all-closed', () => {
+    BrowserWindow.getAllWindows().forEach(win => {
+        win.hide()
+    })
+    app.hide()
+})
+
+app.on('before-quit', () => {
+    server.stopServer()
+    log.info('App is quitting...');
+})
 
 process.on('uncaughtException', (error) => {
     log.error('Uncaught Exception:', error);
