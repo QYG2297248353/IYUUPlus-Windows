@@ -2,6 +2,9 @@ const { spawn, exec, execFile } = require('child_process');
 const os = require('os');
 const path = require('path');
 const log = require('electron-log')
+const mainWin = require('../windows/app')
+
+let serverProcess = null;
 
 function getPhpPath(resourcePath) {
     const arch = os.arch();
@@ -15,95 +18,76 @@ function getPhpPath(resourcePath) {
     }
 }
 
-let serverProcess = null;
-
 function startServer() {
-    let resourcePath = process.resourcesPath;
-    if (resourcePath.includes('node_modules')) {
-        resourcePath = process.cwd();
-    }
+    if (!serverProcess) {
+        let resourcePath = process.resourcesPath;
+        if (resourcePath.includes('node_modules')) {
+            resourcePath = process.cwd();
+        }
 
-    const env = { ...process.env };
-    const phpDir = getPhpPath(resourcePath);
-    env.Path = `${phpDir};${env.Path}`;
+        const env = { ...process.env };
+        const phpDir = getPhpPath(resourcePath);
+        env.Path = `${phpDir};${env.Path}`;
 
-    const workingDir = path.resolve(path.join(resourcePath, 'iyuu'));
-    
-    log.info(`[IYUU] 工作目录: ${workingDir}`);
+        const workingDir = path.resolve(path.join(resourcePath, 'iyuu'));
 
-    // serverProcess = exec(`cmd /c ${batPath}`, {
-    //     cwd: workingDirectory,
-    //     env: env,
-    //     windowsHide: true
-    // }, (error, stdout, stderr) => {
-    //     if (error) {
-    //         log.error(`[IYUU] 服务启动错误: ${error.message}`);
-    //         return;
-    //     }
-    //     if (stderr) {
-    //         log.error(`[IYUU] 服务启动 stderr: ${stderr}`);
-    //         return;
-    //     }
-    //     log.info(`[IYUU] 服务启动成功: ${stdout}`);
-    // });
+        log.info(`[IYUU] 工作目录: ${workingDir}`);
 
-
-    // serverProcess = execFile('cmd', ['/c', batPath], {
-    //     cwd: workingDirectory,
-    //     env: env,
-    //     killSignal: 'SIGTERM',
-    //     windowsHide: true,
-    // }, (error, stdout, stderr) => {
-    //     if (error) {
-    //         log.error(`[IYUU] 服务启动错误: ${error.message}`);
-    //     } else {
-    //         log.error(`[IYUU] 服务启动 stderr: ${stderr}`);
-    //         log.info(`[IYUU] 服务启动成功: ${stdout}`);
-    //     }
-    // });
-
-    serverProcess = spawn('cmd', ['/k', 'windows.bat'], {
-        cwd: workingDir,
-        stdio: 'pipe',
-        env: env,
-        detached: true,
-        windowsHide: false
-    });
-
-    serverProcess.unref();
-
-    if (serverProcess.stdout) {
-        serverProcess.stdout.on('data', (data) => {
-            log.info(`[IYUU] ${data}`);
+        serverProcess = execFile('cmd', ['/c', 'windows.bat'], {
+            cwd: workingDir,
+            env: env,
+            killSignal: 'SIGTERM',
+            windowsHide: true,
+        }, (error, stdout, stderr) => {
+            if (error) {
+                log.error(`[IYUU] 服务启动错误: ${error.message}`);
+            } else {
+                log.error(`[IYUU] 服务启动 stderr: ${stderr}`);
+                log.info(`[IYUU] 服务启动成功: ${stdout}`);
+            }
         });
 
-        serverProcess.stderr.on('data', (data) => {
-            log.error(`[IYUU] ${data}`);
+        // serverProcess = spawn('cmd', ['/c', 'windows.bat'], {
+        //     cwd: workingDir,
+        //     stdio: 'pipe',
+        //     env: env,
+        //     detached: true,
+        //     windowsHide: true
+        // });
+
+        serverProcess.unref();
+
+        if (serverProcess.stdout) {
+            serverProcess.stdout.on('data', (data) => {
+                log.info(`[IYUU] ${data}`);
+            });
+
+            serverProcess.stderr.on('data', (data) => {
+                log.error(`[IYUU] ${data}`);
+            });
+        }
+
+        serverProcess.on('error', (err) => {
+            log.error(`[IYUU] 服务启动错误: ${err.message}`);
         });
 
-
+        serverProcess.on("close", function (code) {
+            log.info("[IYUU] 服务退出：" + code);
+        });
     }
-
-    serverProcess.on('error', (err) => {
-        log.error(`[IYUU] 服务启动错误: ${err.message}`);
-    });
-
-    serverProcess.on("close", function (code) {
-        log.info("[IYUU] 服务退出：" + code);
-    });
 }
 
 function stopServer() {
     if (serverProcess) {
+        mainWin.closeWindows()
         log.info("Killing server process with PID:", serverProcess.pid);
-
         try {
             process.kill(-serverProcess.pid, 'SIGTERM');
             log.info("后台服务已关闭...");
             serverProcess = null;
         } catch (err) {
             log.error('Error using process.kill:', err);
-            exec(`taskkill /PID ${serverProcess.pid} /T /F`, (err, stdout, stderr) => {
+            exec(`taskkill /PID ${serverProcess.pid} /T /F`, (err, _stdout, _stderr) => {
                 if (err) {
                     log.error('Error using taskkill:', err);
                 } else {
@@ -121,6 +105,9 @@ function restartServer() {
     stopServer();
     setTimeout(() => {
         startServer();
+        setTimeout(() => {
+            mainWin.showWindows()
+        }, 2000)
     }, 1000);
 }
 

@@ -1,5 +1,6 @@
 const { Menu, BrowserWindow } = require("electron")
 const server = require('../server/server');
+const mainWin = require('../windows/app');
 
 let template = [
     {
@@ -8,20 +9,14 @@ let template = [
             {
                 label: "刷新",
                 click: () => {
-                    BrowserWindow.getAllWindows().forEach(win => {
-                        win.reload()
-                    })
+                    mainWin.refreshUrl()
                 }
             },
             {
                 label: "重启服务",
                 click: () => {
+                    mainWin.closeWindows()
                     server.restartServer()
-                    setTimeout(() => {
-                        BrowserWindow.getAllWindows().forEach(win => {
-                            win.reload()
-                        })
-                    }, 2000)
                 }
 
             },
