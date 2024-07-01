@@ -79,7 +79,7 @@ function startServer() {
 
 function stopServer() {
     if (serverProcess) {
-        mainWin.closeWindows()
+        mainWin.hideWindows()
         log.info("Killing server process with PID:", serverProcess.pid);
         try {
             process.kill(-serverProcess.pid, 'SIGTERM');

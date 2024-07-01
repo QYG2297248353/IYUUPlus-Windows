@@ -1,6 +1,9 @@
 const { Menu, BrowserWindow } = require("electron")
+const path = require('node:path')
 const server = require('../server/server');
 const mainWin = require('../windows/app');
+
+const iconPath = path.join(__dirname, '..', 'iyuu.ico')
 
 let template = [
     {
@@ -15,7 +18,6 @@ let template = [
             {
                 label: "重启服务",
                 click: () => {
-                    mainWin.closeWindows()
                     server.restartServer()
                 }
 
@@ -26,6 +28,7 @@ let template = [
                     let win = new BrowserWindow({
                         width: 800,
                         height: 600,
+                        icon: iconPath,
                         webPreferences: {
                             nodeIntegration: true,
                             contextIsolation: false,
@@ -48,6 +51,7 @@ let template = [
                     let win = new BrowserWindow({
                         width: 800,
                         height: 600,
+                        icon: iconPath,
                         webPreferences: {
                             nodeIntegration: true,
                             contextIsolation: false,
@@ -65,6 +69,7 @@ let template = [
                     let win = new BrowserWindow({
                         width: 800,
                         height: 600,
+                        icon: iconPath,
                         webPreferences: {
                             nodeIntegration: true,
                             contextIsolation: false,

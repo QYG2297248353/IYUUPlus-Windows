@@ -1,6 +1,7 @@
 const { BrowserWindow } = require('electron')
 const path = require('node:path')
 const log = require('electron-log')
+const server = require('../server/server');
 
 const url = require('url').format({
     protocol: 'http',
@@ -12,11 +13,13 @@ const url = require('url').format({
 let mainWindow = null
 
 const createWindow = () => {
+    const iconPath = path.join(__dirname, '..', 'iyuu.ico')
     if (mainWindow === null) {
         log.info('Create main window')
         mainWindow = new BrowserWindow({
             width: 800,
             height: 600,
+            icon: iconPath,
             webPreferences: {
                 preload: path.join(__dirname, '..', 'preload.js')
             }
@@ -35,7 +38,9 @@ const createWindow = () => {
         })
         mainWindow.on('close', (event) => {
             event.preventDefault()
-            mainWindow.hide()
+            if (mainWindow) {
+                mainWindow.hide()
+            }
         })
     } else {
         log.info('Main window already created')
@@ -55,43 +60,46 @@ const showWindows = () => {
 
 const hideWindows = () => {
     log.info('Hide main window')
-    if (!mainWindow) {
-        createWindow()
-    }
-    if (visibleWindows()) {
-        mainWindow.hide()
+    if (mainWindow) {
+        if (mainWindow.isDestroyed()) {
+            return
+        }
+        if (mainWindow.isVisible()) {
+            mainWindow.hide()
+        }
     }
 }
 
 const closeWindows = () => {
     log.info('Close main window')
-    if (visibleWindows()) {
-        mainWindow.close()
-        mainWindow = null
+    if (mainWindow) {
+        BrowserWindow.getAllWindows().forEach(window => {
+            if (window.id !== mainWindow.id) {
+                window.close()
+            }
+        })
+        mainWindow.destroy()
     }
 }
 
 const refreshWindows = () => {
     log.info('Refresh main window')
     hideWindows()
-    if (visibleWindows()) {
+    if (mainWindow) {
         mainWindow.reload()
     }
 }
 
 const refreshUrl = () => {
     log.info('Refresh main window')
-    if (visibleWindows()) {
+    if (mainWindow) {
         mainWindow.loadURL(url)
     }
 }
 
 const rebootWindows = () => {
     log.info('Reboot main window')
-    hideWindows()
-    if (visibleWindows()) {
-        mainWindow.reload()
-    }
+    server.restartServer()
 }
 
 const visibleWindows = () => {

@@ -1,14 +1,9 @@
-const { app, BrowserWindow } = require('electron')
+const { app } = require('electron')
 const path = require('node:path')
 const server = require('./server/server');
 const log = require('electron-log')
 
 const mainWin = require('./windows/app');
-
-if (require('electron-squirrel-startup')) {
-    app.quit()
-    return
-}
 
 app.whenReady().then(() => {
     log.transports.file.encoding = 'utf8';
@@ -32,12 +27,23 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
-    mainWin.hideWindows()
+    mainWin.closeWindows()
+    log.info('App Windows are closing...');
+})
+
+app.on('will-quit', () => {
     server.stopServer()
     log.info('App is quitting...');
 })
 
 app.on('quit', () => {
-    app.quit()
+    mainWin.closeWindows()
+    server.stopServer()
     log.info('App is quitted');
 })
+
+if (require('electron-squirrel-startup')) {
+    server.stopServer()
+    app.quit()
+    return
+}
