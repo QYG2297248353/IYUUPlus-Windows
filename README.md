@@ -22,6 +22,11 @@ Electron + IYUUPlus 封装而成
 下载安装包，运行即可。
 当前支持 x84 与 x64 位系统
 
++ GitHub 发布地址
+```url
+https://github.com/QYG2297248353/IYUUPlus-Windows/releases
+```
+
 + 网盘仓库
     - [文叔叔](https://f.ws59.cn/f/ehxqmk2tkrx)
     - [123云盘](https://www.123pan.com/s/AEz0Vv-xHcUh.html)
