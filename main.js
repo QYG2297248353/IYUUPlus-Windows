@@ -1,14 +1,19 @@
 const { app } = require('electron')
 const path = require('node:path')
-const server = require('./server/server');
 const log = require('electron-log')
+log.initialize();
+console.log = log.log;
+log.transports.file.resolvePathFn = () => path.join(app.getPath('appData'), 'iyuu-plus/logs/iyuu.log');
+log.transports.file.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] [{level}]{scope} {text}';
+log.transports.file.encoding = 'utf8';
 
+log.info('App is starting...');
+
+const server = require('./server/server');
 const mainWin = require('./windows/app');
 
+
 app.whenReady().then(() => {
-    log.transports.file.encoding = 'utf8';
-    log.transports.file.file = path.join(app.getPath('userData'), 'logs/iyuu.log');
-    log.transports.file.format = '{y}-{m}-{d} {h}:{i}:{s} {text}';
     log.info('App is starting...');
 
     server.startServer()

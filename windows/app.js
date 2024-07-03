@@ -108,4 +108,11 @@ const visibleWindows = () => {
 }
 
 
-module.exports = { hideWindows, showWindows, createWindow, closeWindows, refreshWindows, rebootWindows, visibleWindows, refreshUrl };
+const downloadLocalFile = (filePath) => {
+    log.info('[Download local file]: ', filePath)
+    if (mainWindow) {
+        mainWindow.webContents.downloadURL('file://' + filePath)
+    }
+}
+
+module.exports = { hideWindows, showWindows, createWindow, closeWindows, refreshWindows, rebootWindows, visibleWindows, refreshUrl, downloadLocalFile };

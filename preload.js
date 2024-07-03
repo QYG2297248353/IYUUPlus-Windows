@@ -5,3 +5,10 @@ window.addEventListener('DOMContentLoaded', () => {
     script.setAttribute('data-website-id', '5ca63d47-0739-4059-a480-40e7edf80ff9');
     document.head.appendChild(script);
 });
+
+
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('electron', {
+    onDisplayLog: (callback) => ipcRenderer.on('display-log', (event, data) => callback(data))
+});

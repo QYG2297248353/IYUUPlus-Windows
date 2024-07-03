@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>运行日志</title>
+</head>
+<body>
+    <h1>IYUU 日志信息</h1>
+    <pre id="log-content"></pre>
+
+    <script>
+        window.electron.onDisplayLog((logContent) => {
+            document.getElementById('log-content').innerText = logContent;
+        });
+    </script>
+</body>
+</html>
