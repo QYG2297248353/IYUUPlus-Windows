@@ -78,3 +78,7 @@ https://github.com/QYG2297248353/IYUUPlus-Windows/releases
 `控制面板` 中找到 `iyuu-plus` 右键卸载
 
 ![UNINSTALL](imgs/UNINSTALL.png)
+
+#### 应用升级
+
+退出托盘程序，安装新版安装包，即可完成升级。如果出现异常，可重启计算机后安装。
